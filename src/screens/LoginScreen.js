@@ -1,26 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { View, TextInput, Button, Text, StyleSheet, Alert } from 'react-native';
-import { initializeApp } from "firebase/app";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
-import FingerprintScanner from 'react-native-fingerprint-scanner';
+import { initializeApp } from 'firebase/app';
+import { getAuth, signInWithEmailAndPassword, initializeAuth, getReactNativePersistence } from 'firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as LocalAuthentication from 'expo-local-authentication';
 
-const LoginScreen = ({ onLogin }) => {
+const LoginScreen = ({ navigation, onLogin, route }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   useEffect(() => {
     // Tentativa de autenticação biométrica ao montar o componente
-    FingerprintScanner.isSensorAvailable()
-      .then(biometryType => {
-        if (biometryType) {
-          authenticateBiometric();
-        }
-      })
-      .catch(error => console.log('Biometria não disponível', error));
-    
-    return () => {
-      FingerprintScanner.release();
-    };
+    checkForBiometrics();
   }, []);
 
   const firebaseConfig = {
@@ -42,28 +33,45 @@ const LoginScreen = ({ onLogin }) => {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       console.log("Usuário logado:", user.uid);
-      if (onLogin) {
-        onLogin(user.uid);
+      if (route.params?.onLogin) {
+        route.params.onLogin(user.uid);
       }
+      navigation.navigate('Home');
     } catch (error) {
       console.error("Erro ao fazer login:", error.message);
     }
   };
 
-  const authenticateBiometric = () => {
-    FingerprintScanner.authenticate({ description: 'Scan your fingerprint on the device scanner to continue' })
-      .then(() => {
-        Alert.alert('Autenticação bem-sucedida');
-        // Aqui você pode chamar a função de autenticação do Firebase ou prosseguir com o login.
-        if (onLogin) {
-          onLogin('user-uid-from-biometric-auth');
-        }
-      })
-      .catch(error => {
-        console.error('Erro de autenticação biométrica', error);
-      });
+  const checkForBiometrics = async () => {
+    try {
+      const isBiometricAvailable = await LocalAuthentication.hasHardwareAsync();
+      if (isBiometricAvailable) {
+        authenticateBiometric();
+      }
+    } catch (error) {
+      console.log('Biometria não disponível', error);
+    }
   };
 
+
+  const authenticateBiometric = async () => {
+    try {
+      const biometricAuth = await LocalAuthentication.authenticateAsync({
+        promptMessage: 'Autenticação Biométrica',
+      });
+      if (biometricAuth.success) {
+        Alert.alert('Autenticação bem-sucedida');
+        if (route.params?.onLogin) {
+          route.params.onLogin('user-uid-from-biometric-auth');
+        }
+        navigation.navigate('Home');
+      } else {
+        Alert.alert('Autenticação falhou');
+      }
+    } catch (error) {
+      console.error('Erro de autenticação biométrica', error);
+    }
+  };
   return (
     <View style={styles.authContainer}>
       <Text style={styles.title}>Sign In</Text>
