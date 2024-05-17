@@ -1,31 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, Button, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 import AddAuditListPage from './AddListScreen';
 
 export default function HomePage({ navigation }) {
   const [auditLists, setAuditLists] = useState([]);
 
-  useEffect(() => {
-    const fetchAuditLists = async () => {
-      try {
-        const savedLists = await AsyncStorage.getItem('auditLists');
-        if (savedLists) {
-          setAuditLists(JSON.parse(savedLists));
-        }
-      } catch (error) {
-        console.error('Erro ao obter listas:', error);
-      }
-    };
-
-    fetchAuditLists();
-  }, []);
-
-  const navigateToListDetails = (list) => {
-    navigation.navigate('DetalhesLista', { list });
-  };
-
-  const updateLists = async () => {
+  const fetchAuditLists = async () => {
     try {
       const savedLists = await AsyncStorage.getItem('auditLists');
       if (savedLists) {
@@ -34,6 +16,24 @@ export default function HomePage({ navigation }) {
     } catch (error) {
       console.error('Erro ao obter listas:', error);
     }
+  };
+
+  const updateLists = useCallback(async () => {
+    fetchAuditLists();
+  }, []);
+
+  useEffect(() => {
+    fetchAuditLists();
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchAuditLists();
+    }, [])
+  );
+
+  const navigateToListDetails = (list) => {
+    navigation.navigate('DetalhesLista', { list });
   };
 
   const handleCreateNewList = () => {
@@ -51,10 +51,7 @@ export default function HomePage({ navigation }) {
         data={auditLists}
         keyExtractor={(item, index) => index.toString()}
         renderItem={({ item }) => (
-          <TouchableOpacity onPress={() => {
-            updateLists(); // Atualize a lista antes de navegar
-            navigateToListDetails(item);
-          }}>
+          <TouchableOpacity onPress={() => navigateToListDetails(item)}>
             <View style={styles.listItem}>
               <Text style={styles.listName}>{item.name}</Text>
               <Text>Data: {item.date}</Text>

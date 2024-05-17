@@ -9,10 +9,18 @@ export default function AddAuditListPage({ navigation, route }) {
 
   const { updateLists } = route.params;
 
+  function generateUniqueId() {
+    const timestamp = Date.now().toString(36); // Usando timestamp como parte do ID
+    const randomValue = Math.random().toString(36).substr(2, 5); // Adicionando um valor aleatório
+    return `${timestamp}-${randomValue}`;
+  }
+  
+
   const handleSave = async () => {
     try {
       // Criar objeto com os dados da lista
       const newList = {
+        id: generateUniqueId(),
         name: name,
         date: date,
         unit: unit,

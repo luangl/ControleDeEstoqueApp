@@ -37,14 +37,17 @@ export default function App() {
             <Stack.Screen
               name="AdicaoListaAuditoria"
               component={AdicaoListaAuditoria}
+              options={{ title: 'Adicionar Lista de Auditoria' }}
             />
             <Stack.Screen
               name="AdicaoItensLista"
               component={AdicaoItensLista}
+              options={{ title: 'Adição de Itens/Produtos a Lista' }}
             />
             <Stack.Screen
               name="DetalhesLista"
               component={DetalhesLista}
+              options={{ title: 'Detalhes da Lista' }}
             />
           </>
         )}
