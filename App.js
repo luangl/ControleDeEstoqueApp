@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import LoginScreen from './src/screens/LoginScreen';
 import HomeScreen from './src/screens/HomeScreen';
+import ItensEstoque from './src/screens/ItensEstoque';
 import AdicaoListaAuditoria from './src/screens/AddListScreen';
 import AdicaoItensLista from './src/screens/AddItemScreen';
 import DetalhesLista from './src/screens/DetalhesLista';
@@ -47,6 +48,11 @@ export default function App() {
             <Stack.Screen
               name="DetalhesLista"
               component={DetalhesLista}
+              options={{ title: 'Detalhes da Lista' }}
+            />
+            <Stack.Screen
+              name="ItensEstoque"
+              component={ItensEstoque}
               options={{ title: 'Detalhes da Lista' }}
             />
           </>

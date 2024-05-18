@@ -6,6 +6,7 @@ export default function AddAuditListPage({ navigation, route }) {
   const [name, setName] = useState('');
   const [date, setDate] = useState('');
   const [unit, setUnit] = useState('');
+  const [error, setError] = useState('');
 
   const { updateLists } = route.params;
 
@@ -15,8 +16,31 @@ export default function AddAuditListPage({ navigation, route }) {
     return `${timestamp}-${randomValue}`;
   }
   
+  const isValidDate = (dateString) => {
+    // Regex para validar o formato da data (00/00/0000)
+    const regex = /^\d{2}\/\d{2}\/\d{4}$/;
+    return regex.test(dateString);
+  };
+
+  const handleDateChange = (inputDate) => {
+    const formattedDate = inputDate
+      .replace(/\D/g, '')
+      .replace(/^(\d{2})(\d)/, '$1/$2')
+      .replace(/^(\d{2}\/\d{2})(\d)/, '$1/$2')
+      .replace(/(\d{2}\/\d{2}\/\d{4})\d+?$/, '$1');
+    setDate(formattedDate);
+  };
 
   const handleSave = async () => {
+    if (!name || !date || !unit) {
+      setError('Por favor, preencha todos os campos.');
+      return;
+    }
+    if (!isValidDate(date)) {
+      setError('Por favor, insira uma data válida no formato DD/MM/AAAA.');
+      return;
+    }
+
     try {
       // Criar objeto com os dados da lista
       const newList = {
@@ -54,6 +78,7 @@ export default function AddAuditListPage({ navigation, route }) {
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>Adicionar Lista de Auditoria</Text>
+      {error ? <Text style={styles.error}>{error}</Text> : null}
       <TextInput
         style={styles.input}
         placeholder="Nome da Lista"
@@ -62,9 +87,11 @@ export default function AddAuditListPage({ navigation, route }) {
       />
       <TextInput
         style={styles.input}
-        placeholder="Data"
+        placeholder="Data (DD/MM/AAAA)"
         value={date}
-        onChangeText={setDate}
+        onChangeText={handleDateChange}
+        keyboardType="numeric"
+        maxLength={10}
       />
       <TextInput
         style={styles.input}
@@ -95,5 +122,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 5,
+  },
+  error: {
+    color: 'red',
+    marginBottom: 10,
   },
 });

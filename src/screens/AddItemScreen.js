@@ -7,6 +7,7 @@ export default function AddItemsToList({ navigation, route }) {
   const [expiryDate, setExpiryDate] = useState('');
   const [quantityPerPackage, setQuantityPerPackage] = useState('');
   const [quantity, setQuantity] = useState('');
+  const [error, setError] = useState('');
 
   const { list } = route.params;
 
@@ -16,11 +17,29 @@ export default function AddItemsToList({ navigation, route }) {
     return `${timestamp}-${randomValue}`;
   }
 
+  const handleDateChange = (inputDate) => {
+    const formattedDate = inputDate
+      .replace(/\D/g, '')
+      .replace(/^(\d{2})(\d)/, '$1/$2')
+      .replace(/^(\d{2}\/\d{2})(\d)/, '$1/$2')
+      .replace(/(\d{2}\/\d{2}\/\d{4})\d+?$/, '$1');
+    setExpiryDate(formattedDate);
+  };
+
   const handleSave = async () => {
+    if (!barcode || !expiryDate || !quantityPerPackage || !quantity) {
+      setError('Por favor, preencha todos os campos.');
+      return;
+    }
+
+    if (expiryDate.length !== 10) {
+        setError('Por favor, preencha a data de validade corretamente.');
+        return;
+      }
+
     try {
       // Criar objeto com os dados do item
       const newItem = {
-        
         id: generateUniqueId(),
         barcode: barcode,
         expiryDate: expiryDate,
@@ -30,9 +49,6 @@ export default function AddItemsToList({ navigation, route }) {
 
       // Adicionar o novo item à lista de itens
       list.items.push(newItem);
-
-      // Atualizar a lista na memória (não persistente)
-      console.log('Lista com novo item:', list);
 
       // Salvar a lista atualizada localmente
       await saveUpdatedList(list);
@@ -56,6 +72,7 @@ export default function AddItemsToList({ navigation, route }) {
     setExpiryDate('');
     setQuantityPerPackage('');
     setQuantity('');
+    setError('');
   };
 
   const saveUpdatedList = async (updatedList) => {
@@ -84,29 +101,35 @@ export default function AddItemsToList({ navigation, route }) {
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>Adicionar Item à Lista</Text>
+      {error ? <Text style={styles.error}>{error}</Text> : null}
       <TextInput
         style={styles.input}
         placeholder="Código de Barras"
         value={barcode}
         onChangeText={setBarcode}
+        keyboardType="numeric"
       />
       <TextInput
         style={styles.input}
-        placeholder="Data de Validade"
+        placeholder="Data de Validade (DD/MM/AAAA)"
         value={expiryDate}
-        onChangeText={setExpiryDate}
+        onChangeText={handleDateChange}
+        keyboardType="numeric"
+        maxLength={10}
       />
       <TextInput
         style={styles.input}
         placeholder="Quantidade por Embalagem"
         value={quantityPerPackage}
         onChangeText={setQuantityPerPackage}
+        keyboardType="numeric"
       />
       <TextInput
         style={styles.input}
         placeholder="Quantidade"
         value={quantity}
         onChangeText={setQuantity}
+        keyboardType="numeric"
       />
       <Button title="Salvar" onPress={handleSave} />
     </View>
@@ -131,5 +154,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 5,
+  },
+  error: {
+    color: 'red',
+    marginBottom: 10,
   },
 });
