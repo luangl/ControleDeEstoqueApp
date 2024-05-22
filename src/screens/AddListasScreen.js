@@ -110,6 +110,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+    backgroundColor: '#eee',
   },
   heading: {
     fontSize: 20,

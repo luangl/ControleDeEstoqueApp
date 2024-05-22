@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, Button, Text, StyleSheet, Alert } from 'react-native';
+import { View, TextInput, Button, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import { initializeApp } from 'firebase/app';
-import { getAuth, signInWithEmailAndPassword, initializeAuth, getReactNativePersistence } from 'firebase/auth';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
 import * as LocalAuthentication from 'expo-local-authentication';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
-const LoginScreen = ({ navigation, onLogin, route }) => {
+const LoginScreen = ({ navigation, route }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [passwordVisible, setPasswordVisible] = useState(false);
 
   useEffect(() => {
-    // Tentativa de autenticação biométrica ao montar o componente
     checkForBiometrics();
   }, []);
 
@@ -24,7 +24,6 @@ const LoginScreen = ({ navigation, onLogin, route }) => {
     measurementId: "G-NZNTSQK9M8"
   };
 
-  // Initialize Firebase
   initializeApp(firebaseConfig);
   const auth = getAuth();
 
@@ -38,6 +37,15 @@ const LoginScreen = ({ navigation, onLogin, route }) => {
       }
       navigation.navigate('Home');
     } catch (error) {
+      if (error.code === 'auth/invalid-credential') {
+        Alert.alert('Erro', 'Email não cadastrado.');
+      } else if (error.code === 'auth/wrong-password') {
+        Alert.alert('Erro', 'Senha incorreta.');
+      } else if (error.code === 'auth/invalid-email') {
+        Alert.alert('Erro', 'Email inválido.');
+      } else {
+        Alert.alert('Erro', error.message);
+      }
       console.error("Erro ao fazer login:", error.message);
     }
   };
@@ -52,7 +60,6 @@ const LoginScreen = ({ navigation, onLogin, route }) => {
       console.log('Biometria não disponível', error);
     }
   };
-
 
   const authenticateBiometric = async () => {
     try {
@@ -72,10 +79,13 @@ const LoginScreen = ({ navigation, onLogin, route }) => {
       console.error('Erro de autenticação biométrica', error);
     }
   };
+
   return (
     <View style={styles.authContainer}>
-      <Text style={styles.title}>Sign In</Text>
-      
+      <Text style={styles.title}>Teste Mobile</Text>
+      <Text style={styles.controle}>Controle de Estoque</Text>
+      <Text style={styles.desenvolvido}>Desenvolvido por Luan Glaab Fagundes</Text>
+      <Text style={styles.title}>Fazer Login</Text>
       <TextInput
         style={styles.input}
         value={email}
@@ -83,21 +93,28 @@ const LoginScreen = ({ navigation, onLogin, route }) => {
         placeholder="Email"
         autoCapitalize="none"
       />
-      <TextInput
-        style={styles.input}
-        value={password}
-        onChangeText={setPassword}
-        placeholder="Password"
-        secureTextEntry
-      />
-      <View style={styles.buttonContainer}>
-        <Button title="Sign In" onPress={handleAuthentication} color="#3498db" />
+      <View style={styles.passwordContainer}>
+        <TextInput
+          style={styles.inputPassword}
+          value={password}
+          onChangeText={setPassword}
+          placeholder="Senha"
+          secureTextEntry={!passwordVisible}
+        />
+        <TouchableOpacity onPress={() => setPasswordVisible(!passwordVisible)}>
+          <Icon name={passwordVisible ? "eye" : "eye-slash"} size={24} color="gray" />
+        </TouchableOpacity>
       </View>
       <View style={styles.buttonContainer}>
-        <Button title="Biometric Login" onPress={authenticateBiometric} color="#3498db" />
+        <Button style={styles.botaoLogin} title="Login" onPress={handleAuthentication} color="#3498db" />
+      </View>
+      <View style={styles.buttonContainer}>
+        <Button style={styles.botaoLogin} title="Login por biometria/face-id" onPress={authenticateBiometric} color="blue" />
       </View>
       <View style={styles.bottomContainer}>
-        <Text style={styles.toggleText}>Need an account? Sign Up</Text>
+        <Text style={styles.toggleText} onPress={() => navigation.navigate('Register')}>
+          Não tem uma conta? Cadastre-se!
+        </Text>
       </View>
     </View>
   );
@@ -106,11 +123,20 @@ const LoginScreen = ({ navigation, onLogin, route }) => {
 const styles = StyleSheet.create({
   authContainer: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-start', // Alinhando os itens no início da tela
     alignItems: 'center',
-    padding: 20,
+    padding: 15,
+    backgroundColor: '#ccc',
   },
   title: {
+    fontSize: 24,
+    marginBottom: 10, 
+    marginTop: 140,
+  },
+  desenvolvido: {
+    fontSize: 12,
+  },
+  controle: {
     fontSize: 24,
     marginBottom: 20,
   },
@@ -121,17 +147,39 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 10,
     paddingHorizontal: 10,
+    borderRadius: 10,
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    borderColor: 'gray',
+    borderWidth: 1,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  inputPassword: {
+    flex: 1,
+    height: 40,
+    paddingHorizontal: 10,
   },
   buttonContainer: {
     width: '100%',
     marginTop: 10,
+    borderRadius: 60,
   },
   bottomContainer: {
     marginTop: 20,
   },
   toggleText: {
     color: '#3498db',
+    fontSize: 15,
+    fontWeight: 'bold',
   },
+  botaoLogin: {
+    padding: 20,
+    height: 50,
+  }
 });
 
 export default LoginScreen;

@@ -1,86 +1,60 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Button, Modal } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, FlatList, StyleSheet, TextInput } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFocusEffect } from '@react-navigation/native';
 
-export default function SentItemsScreen({ navigation }) {
-  const [sentItems, setSentItems] = useState([]);
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [modalVisible, setModalVisible] = useState(false);
-
-  const fetchSentItems = async () => {
-    try {
-      const savedLists = await AsyncStorage.getItem('auditLists');
-      if (savedLists) {
-        const parsedLists = JSON.parse(savedLists);
-        const filteredItems = parsedLists
-          .filter(list => list.sent)
-          .reduce((accumulator, currentList) => [...accumulator, ...currentList.items], []);
-        setSentItems(filteredItems);
-      }
-    } catch (error) {
-      console.error('Erro ao obter itens enviados:', error);
-    }
-  };
+export default function EstoqueScreen() {
+  const [stockItems, setStockItems] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    fetchSentItems();
+    const fetchStockItems = async () => {
+      try {
+        const savedLists = await AsyncStorage.getItem('auditLists');
+        if (savedLists) {
+          const auditLists = JSON.parse(savedLists);
+          const sentLists = auditLists.filter(list => list.sent);
+          const items = [];
+          for (const list of sentLists) {
+            const storedItems = await AsyncStorage.getItem(`@items_${list.id}`);
+            if (storedItems) {
+              items.push(...JSON.parse(storedItems));
+            }
+          }
+          const sortedItems = items.sort((a, b) => a.barcode.localeCompare(b.barcode));
+          setStockItems(sortedItems);
+        }
+      } catch (error) {
+        console.error('Erro ao obter itens de estoque:', error);
+      }
+    };
+
+    fetchStockItems();
   }, []);
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchSentItems();
-    }, [])
-  );
-
-  const renderItem = ({ item }) => (
-    <TouchableOpacity onPress={() => handleItemPress(item)}>
-      <View style={styles.listItem}>
-        <Text>Código de Barras: {item.barcode}</Text>
-        <Text>Quantidade: {item.quantity}</Text>
-        <Text>Quantidade por Embalagem: {item.quantityPerPackage}</Text>
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.button} onPress={() => handleItemPress(item)}>
-            <Text style={styles.buttonText}>Ver Detalhes</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
-
-  const handleItemPress = (item) => {
-    setSelectedItem(item);
-    setModalVisible(true);
-  };
+  const filteredItems = stockItems.filter(item => item.barcode.includes(searchQuery));
 
   return (
     <View style={styles.container}>
-      <Button title="Voltar" onPress={() => navigation.goBack()} />
-      <FlatList
-        data={sentItems}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={renderItem}
+      <Text style={styles.title}>Controle de Estoque</Text>
+      <TextInput
+        style={styles.searchInput}
+        placeholder="Pesquisar por código de barras"
+        value={searchQuery}
+        onChangeText={text => setSearchQuery(text)}
       />
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            {selectedItem && (
-              <>
-                <Text>Código de Barras: {selectedItem.barcode}</Text>
-                <Text>Quantidade: {selectedItem.quantity}</Text>
-              <Text>Data de Validade: {selectedItem.expiryDate}</Text>
-              <Text>Quantidade por Embalagem: {selectedItem.quantityPerPackage}</Text>
-                <Button title="Fechar" onPress={() => setModalVisible(false)} />
-              </>
-            )}
+      <FlatList
+        data={filteredItems}
+        keyExtractor={(item, index) => index.toString()}
+        renderItem={({ item }) => (
+          <View style={styles.listItem}>
+            <Text style={styles.listName}>{item.name}</Text>
+            <Text>Código de Barras: {item.barcode}</Text>
+            <Text>Quantidade: {item.quantity}</Text>
+            <Text>Quantidade Por Embalagem: {item.quantityPerPackage}</Text>
+            <Text>Data de Validade: {item.expiryDate}</Text>
           </View>
-        </View>
-      </Modal>
+        )}
+      />
     </View>
   );
 }
@@ -89,39 +63,35 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+    backgroundColor: '#eee',
+    marginTop: 0,
   },
-  listItem: {
-    backgroundColor: '#f9f9f9',
-    padding: 10,
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  searchInput: {
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
     marginBottom: 10,
-    borderRadius: 5,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: 10,
-  },
-  button: {
-    backgroundColor: '#007bff',
-    paddingVertical: 5,
     paddingHorizontal: 10,
     borderRadius: 5,
   },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
+  listItem: {
+    backgroundColor: '#ccc',
+    padding: 10,
+    marginBottom: 10,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: '#ddd',
   },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 10,
-    width: '80%',
-    alignItems: 'center',
+  listName: {
+    marginTop: "-8%",
+    fontWeight: 'bold',
+    fontSize: 20,
+    marginBottom: 5,
   },
 });

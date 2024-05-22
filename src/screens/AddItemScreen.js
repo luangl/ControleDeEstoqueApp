@@ -8,12 +8,11 @@ export default function AddItemsToList({ navigation, route }) {
   const [quantityPerPackage, setQuantityPerPackage] = useState('');
   const [quantity, setQuantity] = useState('');
   const [error, setError] = useState('');
-
-  const { list } = route.params;
+  const [list, setList] = useState(route.params.list);
 
   function generateUniqueId() {
-    const timestamp = Date.now().toString(36); // Usando timestamp como parte do ID
-    const randomValue = Math.random().toString(36).substr(2, 5); // Adicionando um valor aleatório
+    const timestamp = Date.now().toString(36);
+    const randomValue = Math.random().toString(36).substr(2, 5);
     return `${timestamp}-${randomValue}`;
   }
 
@@ -26,19 +25,25 @@ export default function AddItemsToList({ navigation, route }) {
     setExpiryDate(formattedDate);
   };
 
+  const validateDate = (date) => {
+    const [day, month, year] = date.split('/');
+    const isValidDate = new Date(`${year}-${month}-${day}`);
+    return isValidDate && isValidDate.getFullYear() === parseInt(year, 10);
+  };
+
   const handleSave = async () => {
+    setError('');
     if (!barcode || !expiryDate || !quantityPerPackage || !quantity) {
       setError('Por favor, preencha todos os campos.');
       return;
     }
 
-    if (expiryDate.length !== 10) {
-        setError('Por favor, preencha a data de validade corretamente.');
-        return;
-      }
+    if (expiryDate.length !== 10 || !validateDate(expiryDate)) {
+      setError('Por favor, preencha a data de validade corretamente.');
+      return;
+    }
 
     try {
-      // Criar objeto com os dados do item
       const newItem = {
         id: generateUniqueId(),
         barcode: barcode,
@@ -47,13 +52,14 @@ export default function AddItemsToList({ navigation, route }) {
         quantity: quantity
       };
 
-      // Adicionar o novo item à lista de itens
-      list.items.push(newItem);
+      const updatedList = {
+        ...list,
+        items: [...list.items, newItem]
+      };
 
-      // Salvar a lista atualizada localmente
-      await saveUpdatedList(list);
+      setList(updatedList);
+      await saveUpdatedList(updatedList);
 
-      // Perguntar ao usuário se deseja adicionar mais itens
       Alert.alert(
         'Item Adicionado',
         'Deseja adicionar mais itens?',
@@ -77,21 +83,19 @@ export default function AddItemsToList({ navigation, route }) {
 
   const saveUpdatedList = async (updatedList) => {
     try {
-      // Obter as listas existentes
       let existingLists = await AsyncStorage.getItem('auditLists');
       existingLists = existingLists ? JSON.parse(existingLists) : [];
 
-      // Encontrar a lista atualizada na lista existente
-      const index = existingLists.findIndex(item => item.name === updatedList.name && item.date === updatedList.date && item.unit === updatedList.unit);
+      const index = existingLists.findIndex(
+        item => item.name === updatedList.name && item.date === updatedList.date && item.unit === updatedList.unit
+      );
 
-      // Substituir a lista existente pela lista atualizada
       if (index !== -1) {
         existingLists[index] = updatedList;
       } else {
         existingLists.push(updatedList);
       }
 
-      // Salvar a lista atualizada
       await AsyncStorage.setItem('auditLists', JSON.stringify(existingLists));
     } catch (error) {
       console.error('Erro ao salvar lista:', error);
@@ -142,6 +146,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+    backgroundColor: '#eee',
   },
   heading: {
     fontSize: 20,

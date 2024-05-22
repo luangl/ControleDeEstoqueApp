@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, Modal, TextInput, Button } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default function ItemListScreen({ route }) {
+export default function ItemListScreen({ route, navigation }) {
   const { list } = route.params;
   const [selectedItem, setSelectedItem] = useState(null);
   const [isViewModalVisible, setIsViewModalVisible] = useState(false);
@@ -76,17 +76,24 @@ export default function ItemListScreen({ route }) {
     setIsEditModalVisible(false);
   };
 
-  const saveEditedItem = () => {
-    const updatedItems = items.map((item) => {
+  const saveEditedItem = async () => {
+    const updatedItems = list.items.map((item) => {
       if (item.id === editedItem.id) {
         return editedItem;
       }
       return item;
     });
-    setItems(updatedItems);
-    saveItemsToStorage(updatedItems);
+  
+    try {
+      await AsyncStorage.setItem(`@items_${list.id}`, JSON.stringify(updatedItems));
+      setItems(updatedItems);  // Navegar de volta para a tela de todos os itens
+    } catch (error) {
+      console.error('Failed to save edited item to storage', error);
+    }
+  
     closeModal();
   };
+  
 
   const handleEditChange = (key, value) => {
     // Para o campo de data, mantemos a formatação enquanto permitimos apenas números
@@ -122,13 +129,13 @@ export default function ItemListScreen({ route }) {
               <Text>Quantidade: {item.quantity}</Text>
               {!list.sent && (
                 <View style={styles.buttonContainer}>
-                  <TouchableOpacity style={styles.button} onPress={() => handleViewItem(item)}>
+                  <TouchableOpacity style={styles.buttonVer} onPress={() => handleViewItem(item)}>
                     <Text style={styles.buttonText}>Ver</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.button} onPress={() => handleEditItem(item)}>
+                  <TouchableOpacity style={styles.buttonEditar} onPress={() => handleEditItem(item)}>
                     <Text style={styles.buttonText}>Editar</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.button} onPress={() => handleDeleteItem(item)}>
+                  <TouchableOpacity style={styles.buttonExcluir} onPress={() => handleDeleteItem(item)}>
                     <Text style={styles.buttonText}>Excluir</Text>
                   </TouchableOpacity>
                 </View>
@@ -229,8 +236,20 @@ buttonContainer: {
   justifyContent: 'space-between',
   marginTop: 10,
 },
-button: {
+buttonVer: {
   backgroundColor: '#007bff',
+  paddingVertical: 5,
+  paddingHorizontal: 10,
+  borderRadius: 5,
+},
+buttonEditar: {
+  backgroundColor: 'green',
+  paddingVertical: 5,
+  paddingHorizontal: 10,
+  borderRadius: 5,
+},
+buttonExcluir: {
+  backgroundColor: 'red',
   paddingVertical: 5,
   paddingHorizontal: 10,
   borderRadius: 5,
@@ -263,3 +282,4 @@ input: {
   padding: 8,
 },
 });
+

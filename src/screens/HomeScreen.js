@@ -40,9 +40,11 @@ export default function HomePage({ navigation }) {
     navigation.navigate('AdicaoListaAuditoria', { updateLists });
   };
 
-  const handleVerEstoque = () => {
+  const handleEstoque = () => {
     navigation.navigate('ItensEstoque');
   };
+
+  
 
   const deleteList = async (list) => {
     try {
@@ -77,6 +79,7 @@ export default function HomePage({ navigation }) {
 
   return (
     <View style={styles.container}>
+      <View><Text style={styles.title}>Teste Mobile - Controle de Estoque</Text></View>
       <View style={styles.segmentContainer}>
         <TouchableOpacity
           style={[styles.segment, selectedSegment === 'pendentes' && styles.selectedSegment]}
@@ -91,14 +94,21 @@ export default function HomePage({ navigation }) {
           <Text style={styles.segmentText}>Listas Enviadas</Text>
         </TouchableOpacity>
       </View>
+          <View style={styles.buttonContainer}>
       <Button
         title="Criar Nova Lista"
         onPress={handleCreateNewList}
+        style={styles.buttonCriar}
+        color="blue"
       />
       <Button
-        title="Ver itens/Produtos do estoque"
-        onPress={handleVerEstoque}
+        title="Controle de Estoque"
+        onPress={handleEstoque}
+        style={styles.buttonControle}
+        color="green"
       />
+    </View>
+
       <FlatList
         data={renderListSegment()}
         keyExtractor={(item, index) => index.toString()}
@@ -110,13 +120,13 @@ export default function HomePage({ navigation }) {
               <Text>Unidade: {item.unit}</Text>
               {selectedSegment === 'pendentes' && (
                 <View style={styles.buttonContainer}>
-                  <TouchableOpacity style={styles.button} onPress={() => navigateToListDetails(item)}>
+                  <TouchableOpacity style={styles.buttonVer} onPress={() => navigateToListDetails(item)}>
                     <Text style={styles.buttonText}>Ver</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.button} onPress={() => deleteList(item)}>
+                  <TouchableOpacity backgroundColor="red" style={styles.buttonExcluir} onPress={() => deleteList(item)}>
                     <Text style={styles.buttonText}>Excluir</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.button} onPress={() => syncList(item)}>
+                  <TouchableOpacity style={styles.buttonSincronizar} onPress={() => syncList(item)}>
                     <Text style={styles.buttonText}>Sincronizar</Text>
                   </TouchableOpacity>
                 </View>
@@ -133,6 +143,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+    paddingTop: 60,
+    backgroundColor: '#ccc'
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    justifyContent: 'center',
+    textAlign: 'center',
   },
   segmentContainer: {
     flexDirection: 'row',
@@ -156,22 +174,41 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   listItem: {
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#eee',
     padding: 10,
     marginBottom: 10,
     borderRadius: 5,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: '#000',
   },
   listName: {
     fontWeight: 'bold',
+    justifyContent: 'center',
+    textAlign: 'center',
     marginBottom: 5,
+    fontSize: 15,
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 10,
-  },
-  button: {
+    marginBottom: 20,
+    width: "100%",
+  },  
+  buttonVer: {
     backgroundColor: '#007bff',
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+  },
+  buttonExcluir: {
+    backgroundColor: 'red',
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+  },
+  buttonSincronizar: {
+    backgroundColor: 'green',
     paddingVertical: 5,
     paddingHorizontal: 10,
     borderRadius: 5,
