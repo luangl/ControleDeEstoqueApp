@@ -3,6 +3,15 @@
     "name": "AppControleDeEstoque",
     "slug": "AppControleDeEstoque",
     "version": "1.0.0",
+    "extra": {
+      "FIREBASE_API_KEY": "AIzaSyAnqEt84M8V_Cq0iBHJOkGHZ5vSSDEsBhk",
+      "FIREBASE_AUTH_DOMAIN": "controledeestoqueapp-42d39.firebaseapp.com",
+      "FIREBASE_PROJECT_ID": "controledeestoqueapp-42d39",
+      "FIREBASE_STORAGE_BUCKET": "controledeestoqueapp-42d39.appspot.com",
+      "FIREBASE_MESSAGING_SENDER_ID": "174710331347",
+      "FIREBASE_APP_ID": "1:174710331347:web:f0ee1bcbd358292f488126",
+      "FIREBASE_MEASUREMENT_ID": "G-NZNTSQK9M8"
+    },
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",

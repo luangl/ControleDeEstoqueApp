@@ -58,8 +58,6 @@ export default function HomePage({ navigation }) {
 
   const syncList = async (list) => {
     try {
-      // Sua lógica de sincronização aqui
-      // Após a sincronização, você pode mover a lista para a seção 'enviadas'
       list.sent = true;
       await AsyncStorage.setItem('auditLists', JSON.stringify(auditLists));
       setAuditLists([...auditLists]);

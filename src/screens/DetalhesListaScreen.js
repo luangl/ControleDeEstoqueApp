@@ -86,7 +86,7 @@ export default function ItemListScreen({ route, navigation }) {
   
     try {
       await AsyncStorage.setItem(`@items_${list.id}`, JSON.stringify(updatedItems));
-      setItems(updatedItems);  // Navegar de volta para a tela de todos os itens
+      setItems(updatedItems);  
     } catch (error) {
       console.error('Failed to save edited item to storage', error);
     }
@@ -96,7 +96,6 @@ export default function ItemListScreen({ route, navigation }) {
   
 
   const handleEditChange = (key, value) => {
-    // Para o campo de data, mantemos a formatação enquanto permitimos apenas números
     if (key === 'expiryDate') {
       value = value.replace(/\D/g, '');
       if (value.length > 2 && value.length <= 4) {
@@ -105,7 +104,6 @@ export default function ItemListScreen({ route, navigation }) {
         value = `${value.slice(0, 2)}/${value.slice(2, 4)}/${value.slice(4, 8)}`;
       }
     } else {
-      // Para os outros campos, permitimos apenas números
       value = value.replace(/\D/g, '');
     }
     setEditedItem(prevState => ({
@@ -147,7 +145,6 @@ export default function ItemListScreen({ route, navigation }) {
         <Text style={styles.noItems}>Nenhum item nesta lista</Text>
       )}
 
-      {/* Modal de visualização */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -166,7 +163,6 @@ export default function ItemListScreen({ route, navigation }) {
         </View>
       </Modal>
 
-      {/* Modal de edição */}
       <Modal
         animationType="slide"
         transparent={true}

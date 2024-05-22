@@ -11,13 +11,12 @@ export default function AddAuditListPage({ navigation, route }) {
   const { updateLists } = route.params;
 
   function generateUniqueId() {
-    const timestamp = Date.now().toString(36); // Usando timestamp como parte do ID
-    const randomValue = Math.random().toString(36).substr(2, 5); // Adicionando um valor aleatório
+    const timestamp = Date.now().toString(36); 
+    const randomValue = Math.random().toString(36).substr(2, 5); 
     return `${timestamp}-${randomValue}`;
   }
   
   const isValidDate = (dateString) => {
-    // Regex para validar o formato da data (00/00/0000)
     const regex = /^\d{2}\/\d{2}\/\d{4}$/;
     return regex.test(dateString);
   };
@@ -42,19 +41,15 @@ export default function AddAuditListPage({ navigation, route }) {
     }
 
     try {
-      // Criar objeto com os dados da lista
       const newList = {
         id: generateUniqueId(),
         name: name,
         date: date,
         unit: unit,
-        items: [] // Inicializar a lista de itens como um array vazio
+        items: []
       };
-      // Salvar lista localmente
       await saveList(newList);
-      // Atualizar as listas na página inicial
       updateLists();
-      // Navegar para a tela de adição de itens/produtos à lista
       navigation.navigate('AdicaoItensLista', { list: newList });
     } catch (error) {
       console.error('Erro ao salvar lista:', error);
@@ -63,12 +58,11 @@ export default function AddAuditListPage({ navigation, route }) {
 
   const saveList = async (list) => {
     try {
-      // Obter as listas existentes
       let existingLists = await AsyncStorage.getItem('auditLists');
       existingLists = existingLists ? JSON.parse(existingLists) : [];
-      // Adicionar a nova lista à lista existente
+
       existingLists.push(list);
-      // Salvar a lista atualizada
+
       await AsyncStorage.setItem('auditLists', JSON.stringify(existingLists));
     } catch (error) {
       console.error('Erro ao salvar lista:', error);

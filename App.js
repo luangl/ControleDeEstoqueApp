@@ -6,10 +6,10 @@ import { useNavigation } from '@react-navigation/native';
 import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
 import HomeScreen from './src/screens/HomeScreen';
-import ItensEstoque from './src/screens/ItensEstoque';
+import ItensEstoque from './src/screens/ItensEstoqueScreen';
 import AdicaoListaAuditoria from './src/screens/AddListasScreen';
 import AdicaoItensLista from './src/screens/AddItemScreen';
-import DetalhesLista from './src/screens/DetalhesLista';
+import DetalhesLista from './src/screens/DetalhesListaScreen';
 import { navHeaderStyles } from './navigationStyles';
 
 const Stack = createStackNavigator();

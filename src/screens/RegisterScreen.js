@@ -3,6 +3,7 @@ import { View, TextInput, Button, Text, StyleSheet, Alert, TouchableOpacity } fr
 import { initializeApp, getApps } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { firebaseConfig } from '../../firebaseConfig';
 
 const RegisterScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -11,15 +12,6 @@ const RegisterScreen = ({ navigation }) => {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyAnqEt84M8V_Cq0iBHJOkGHZ5vSSDEsBhk",
-    authDomain: "controledeestoqueapp-42d39.firebaseapp.com",
-    projectId: "controledeestoqueapp-42d39",
-    storageBucket: "controledeestoqueapp-42d39.appspot.com",
-    messagingSenderId: "174710331347",
-    appId: "1:174710331347:web:f0ee1bcbd358292f488126",
-    measurementId: "G-NZNTSQK9M8"
-  };
 
   if (!getApps().length) {
     initializeApp(firebaseConfig);
