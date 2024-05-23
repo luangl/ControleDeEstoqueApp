@@ -1,60 +1,116 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, TextInput } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 
-export default function EstoqueScreen() {
-  const [stockItems, setStockItems] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
+export default function ItensEstoque({ navigation }) {
+  const [sentLists, setSentLists] = useState([]);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [filterText, setFilterText] = useState('');
+
+  const fetchSentLists = async () => {
+    try {
+      const savedLists = await AsyncStorage.getItem('auditLists');
+      if (savedLists) {
+        const lists = JSON.parse(savedLists);
+        let filteredLists = lists.filter(list => list.sent);
+
+        // Filtrar por intervalo de datas
+        if (startDate && endDate) {
+          const filteredStartDate = convertToDate(startDate);
+          const filteredEndDate = convertToDate(endDate);
+
+          filteredLists = filteredLists.filter(list => {
+            const listDate = convertToDate(list.date);
+            return listDate >= filteredStartDate && listDate <= filteredEndDate;
+          });
+        }
+
+        // Filtrar por nome da lista
+        if (filterText) {
+          filteredLists = filteredLists.filter(list =>
+            list.name.toLowerCase().includes(filterText.toLowerCase())
+          );
+        }
+
+        setSentLists(filteredLists);
+      }
+    } catch (error) {
+      console.error('Erro ao obter listas enviadas:', error);
+    }
+  };
+
+  const convertToDate = (dateString) => {
+    const [day, month, year] = dateString.split('/');
+    return new Date(year, month - 1, day);
+  };
 
   useEffect(() => {
-    const fetchStockItems = async () => {
-      try {
-        const savedLists = await AsyncStorage.getItem('auditLists');
-        if (savedLists) {
-          const auditLists = JSON.parse(savedLists);
-          const sentLists = auditLists.filter(list => list.sent);
-          const items = [];
-          for (const list of sentLists) {
-            const storedItems = await AsyncStorage.getItem(`@items_${list.id}`);
-            if (storedItems) {
-              items.push(...JSON.parse(storedItems));
-            }
-          }
-          const sortedItems = items.sort((a, b) => a.barcode.localeCompare(b.barcode));
-          setStockItems(sortedItems);
-        }
-      } catch (error) {
-        console.error('Erro ao obter itens de estoque:', error);
-      }
-    };
+    fetchSentLists();
+  }, [startDate, endDate, filterText]);
 
-    fetchStockItems();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchSentLists();
+    }, [startDate, endDate, filterText])
+  );
 
-  const filteredItems = stockItems.filter(item => item.barcode.includes(searchQuery));
+  const navigateToListDetails = async (list) => {
+    navigation.navigate('DetalhesLista', { list });
+  };
+
+  // Função para adicionar automaticamente as barras enquanto o usuário digita
+  const autoFormatDate = (inputDate) => {
+    // Remove todos os caracteres que não são números
+    let formattedDate = inputDate.replace(/\D/g, '');
+
+    // Adiciona barras nas posições corretas
+    if (formattedDate.length > 2) {
+      formattedDate = formattedDate.replace(/^(\d{2})(\d)/, '$1/$2');
+    }
+    if (formattedDate.length > 5) {
+      formattedDate = formattedDate.replace(/^(\d{2})\/(\d{2})(\d)/, '$1/$2/$3');
+    }
+
+    return formattedDate;
+  };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Controle de Estoque</Text>
+      <View style={styles.dateFilter}>
+        <TextInput
+          style={styles.input}
+          placeholder="Filtrar Data (Data Inicial)"
+          value={startDate}
+          onChangeText={text => text.length <= 10 && setStartDate(autoFormatDate(text))}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Data final (DD/MM/AAAA)"
+          value={endDate}
+          onChangeText={text => text.length <= 10 && setEndDate(autoFormatDate(text))}
+        />
+      </View>
       <TextInput
-        style={styles.searchInput}
-        placeholder="Pesquisar por código de barras"
-        value={searchQuery}
-        onChangeText={text => setSearchQuery(text)}
+        style={styles.input}
+        placeholder="Filtrar por nome da lista"
+        value={filterText}
+        onChangeText={setFilterText}
       />
-      <FlatList
-        data={filteredItems}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.listItem}>
-            <Text style={styles.listName}>{item.name}</Text>
-            <Text>Código de Barras: {item.barcode}</Text>
-            <Text>Quantidade: {item.quantity}</Text>
-            <Text>Quantidade Por Embalagem: {item.quantityPerPackage}</Text>
-            <Text>Data de Validade: {item.expiryDate}</Text>
-          </View>
-        )}
-      />
+      <ScrollView>
+        {sentLists.map((list, index) => (
+          <TouchableOpacity key={index} onPress={() => navigateToListDetails(list)}>
+            <View style={styles.listItem}>
+              <Text style={styles.listName}>{list.name}</Text>
+              <Text>Data: {list.date}</Text>
+              <Text>Unidade: {list.unit}</Text>
+              <Text style={styles.quantidade}>Quantidade de itens cadastrados na lista: {list.items.length}</Text> 
+            </View>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
     </View>
   );
 }
@@ -63,35 +119,44 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#eee',
-    marginTop: 0,
+    paddingTop: 60,
+    backgroundColor: '#ccc'
   },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
+    justifyContent: 'center',
     textAlign: 'center',
-    marginBottom: 20,
   },
-  searchInput: {
+  quantidade: {
+    fontWeight: 'bold',
+  },
+  listItem: {
+    backgroundColor: '#eee',
+    padding: 10,
+    marginBottom: 10,
+    borderRadius: 5,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: '#000',
+  },
+  listName: {
+    fontWeight: 'bold',
+    justifyContent: 'center',
+    textAlign: 'center',
+    marginBottom: 5,
+    fontSize: 17,
+  },
+  dateFilter: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  input: {
     height: 40,
     borderColor: 'gray',
     borderWidth: 1,
     marginBottom: 10,
     paddingHorizontal: 10,
-    borderRadius: 5,
-  },
-  listItem: {
-    backgroundColor: '#ccc',
-    padding: 10,
-    marginBottom: 10,
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  listName: {
-    marginTop: "-8%",
-    fontWeight: 'bold',
-    fontSize: 20,
-    marginBottom: 5,
-  },
+  }
 });
