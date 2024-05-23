@@ -77,7 +77,7 @@ export default function ItemListScreen({ route, navigation }) {
   };
 
   const saveEditedItem = async () => {
-    const updatedItems = list.items.map((item) => {
+    const updatedItems = items.map((item) => {
       if (item.id === editedItem.id) {
         return editedItem;
       }
@@ -93,6 +93,7 @@ export default function ItemListScreen({ route, navigation }) {
   
     closeModal();
   };
+  
   
 
   const handleEditChange = (key, value) => {
@@ -201,7 +202,7 @@ export default function ItemListScreen({ route, navigation }) {
       keyboardType="numeric"
     />
     <Button title="Salvar" onPress={saveEditedItem} />
-    <Button title="Cancelar" onPress={closeModal} />
+    <Button color="red" title="Cancelar" onPress={closeModal} />
   </View>
 </View>
 </Modal>
@@ -276,6 +277,6 @@ input: {
   borderRadius: 5,
   marginBottom: 10,
   padding: 8,
-},
+}
 });
 
